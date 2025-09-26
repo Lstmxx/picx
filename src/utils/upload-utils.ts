@@ -1,4 +1,5 @@
 import { UploadedImageModel, UserConfigInfoModel, UploadImageModel } from '@/common/model'
+import { UploadedVideoModel, UploadVideoModel } from '@/common/model/video'
 import { store } from '@/stores'
 import {
   createCommit,
@@ -8,7 +9,7 @@ import {
   getFileBlob,
   getBranchInfo
 } from '@/common/api'
-import { PICX_UPLOAD_IMG_DESC } from '@/common/constant'
+import { PICX_UPLOAD_IMG_DESC, PICX_UPLOAD_VIDEO_DESC } from '@/common/constant'
 import i18n from '@/plugins/vue/i18n'
 
 /**
@@ -189,6 +190,115 @@ export function uploadImageToGitHub(
     if (uploadRes) {
       const { name, sha, path, size } = uploadRes.content
       uploadedHandle({ name, sha, path, size }, img, userConfigInfo)
+      resolve(true)
+    } else {
+      resolve(false)
+    }
+  })
+}
+
+/**
+ * 视频上传成功之后的处理
+ * @param res
+ * @param video
+ * @param userConfigInfo
+ */
+const videoUploadedHandle = (
+  res: { name: string; sha: string; path: string; size: number },
+  video: UploadVideoModel,
+  userConfigInfo: UserConfigInfoModel
+) => {
+  let dir = userConfigInfo.selectedDir
+
+  if (video?.reUploadInfo?.isReUpload) {
+    dir = video.reUploadInfo.dir
+  }
+
+  // 上传状态处理
+  video.uploadStatus.progress = 100
+  video.uploadStatus.uploading = false
+
+  const uploadedVideo: UploadedVideoModel = {
+    checked: false,
+    type: 'video',
+    uuid: video.uuid,
+    dir,
+    name: res.name,
+    sha: res.sha,
+    path: res.path,
+    deleting: false,
+    size: res.size,
+    deployed: true
+  }
+
+  video.uploadedVideo = uploadedVideo
+
+  // dirImageList 增加目录
+  store.dispatch('DIR_IMAGE_LIST_ADD_DIR', dir)
+
+  // dirImageList 增加视频
+  store.dispatch('DIR_IMAGE_LIST_ADD_IMAGE', uploadedVideo)
+}
+
+/**
+ * 上传视频的 URL 处理
+ * @param config
+ * @param videoObj
+ */
+export const uploadVideoUrlHandle = (
+  config: UserConfigInfoModel,
+  videoObj: UploadVideoModel
+): string => {
+  const { owner, repo, selectedDir: dir } = config
+  const filename: string = videoObj.filename.final
+
+  let path = filename
+
+  if (dir !== '/') {
+    path = `${dir}/${filename}`
+  }
+
+  if (videoObj?.reUploadInfo?.isReUpload) {
+    path = videoObj.reUploadInfo.path
+  }
+
+  return `/repos/${owner}/${repo}/contents/${path}`
+}
+
+/**
+ * 上传一个视频到 GitHub 仓库
+ * @param userConfigInfo
+ * @param video
+ */
+export function uploadVideoToGitHub(
+  userConfigInfo: UserConfigInfoModel,
+  video: UploadVideoModel
+): Promise<Boolean> {
+  const { branch, email, owner } = userConfigInfo
+
+  const data: any = {
+    message: PICX_UPLOAD_VIDEO_DESC,
+    branch,
+    content: video.base64.originalBase64.split(',')[1]
+  }
+
+  if (email) {
+    data.committer = {
+      name: owner,
+      email
+    }
+  }
+
+  video.uploadStatus.uploading = true
+
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async (resolve) => {
+    const uploadRes = await uploadSingleImage(uploadVideoUrlHandle(userConfigInfo, video), data)
+    console.log('uploadSingleVideo >> ', uploadRes)
+    video.uploadStatus.uploading = false
+    if (uploadRes) {
+      const { name, sha, path, size } = uploadRes.content
+      videoUploadedHandle({ name, sha, path, size }, video, userConfigInfo)
       resolve(true)
     } else {
       resolve(false)

@@ -40,7 +40,8 @@
     "settings": "图床设置",
     "toolbox": "工具箱",
     "feedback": "帮助反馈",
-    "actions": "快捷操作"
+    "actions": "快捷操作",
+    "video_upload": "上传视频"
   },
   "actions": {
     "watermark": "图片水印",
