@@ -163,6 +163,7 @@
   },
   "upload_page": {
     "upload_area_text": "拖曳 / 貼上 / 點擊此處選擇圖片",
+    "upload_video_area_text": "拖曳 / 貼上 / 點擊此處選擇影片",
     "message1": "請先完成圖床配置",
     "message2": "請選擇一個倉庫",
     "message3": "目錄不能為空",

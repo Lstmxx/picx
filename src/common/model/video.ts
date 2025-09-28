@@ -21,9 +21,7 @@ export interface UploadedVideoModel {
 export interface UploadVideoModel {
   uuid: string
 
-  base64: {
-    originalBase64: string
-  }
+  objectURL: string
 
   fileInfo: {
     originalFile: File | null

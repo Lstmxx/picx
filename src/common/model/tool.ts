@@ -12,6 +12,12 @@ export interface ImageHandleResult {
   file: File
 }
 
+export interface VideoHandleResult {
+  uuid: string
+  objectURL: string
+  file: File
+}
+
 export interface ImgProcessStateModel {
   uuid: string
   originalName: string

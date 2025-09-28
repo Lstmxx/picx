@@ -1,5 +1,5 @@
 import { ElMessage } from 'element-plus'
-import { ImageHandleResult } from '@/common/model'
+import { ImageHandleResult, VideoHandleResult } from '@/common/model'
 import { getUuid } from '@/utils/common-utils'
 import { imgFileToBase64 } from '@/utils/image-utils'
 import { IMG_UPLOAD_MAX_SIZE } from '@/common/constant'
@@ -91,6 +91,42 @@ export const gettingFilesHandle = (file: File): Promise<ImageHandleResult | null
     resolve({
       uuid: getUuid(),
       base64,
+      file
+    })
+  })
+}
+
+/**
+ * 判断文件类型是否为视频格式
+ * @param fileType
+ */
+export const isVideo = (fileType: string): boolean => {
+  fileType = fileType.toLowerCase()
+  return /(mp4|mov|avi|mkv|flv|wmv|webm)$/.test(fileType)
+}
+
+/**
+ * 处理获取的视频文件
+ * @param file
+ */
+export const gettingVideoFilesHandle = (file: File): Promise<VideoHandleResult | null> => {
+  return new Promise((resolve) => {
+    if (!file) {
+      resolve(null)
+    }
+
+    const fileType = file.name.split('.').pop() || ''
+
+    if (!isVideo(fileType)) {
+      ElMessage.error(i18n.global.t('upload_page.tip_9', { name: file.name }))
+      resolve(null)
+    }
+
+    const objectURL = URL.createObjectURL(file)
+
+    resolve({
+      uuid: getUuid(),
+      objectURL,
       file
     })
   })

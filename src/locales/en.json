@@ -163,6 +163,7 @@
   },
   "upload_page": {
     "upload_area_text": "Drag / Paste / Click here to select images",
+    "upload_video_area_text": "Drag / Paste / Click here to select videos",
     "message1": "Please complete image hosting configuration first",
     "message2": "Please select a repository",
     "message3": "Directory cannot be empty",
