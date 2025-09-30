@@ -34,12 +34,7 @@ const { onDrop, onPaste, onSelect, curShowVideo } = useGettingVideo((result) => 
       <el-icon class="icon"><IEpUploadFilled /></el-icon>
       <div class="text">{{ $t('upload_page.upload_video_area_text') }}</div>
     </div>
-    <video
-      class="preview-video"
-      v-if="curShowVideo.objectURL"
-      autoplay
-      :src="curShowVideo.objectURL"
-    />
+    <video class="preview-video" v-if="curShowVideo.objectURL" :src="curShowVideo.objectURL" />
   </div>
 </template>
 

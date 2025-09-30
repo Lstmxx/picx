@@ -3,9 +3,10 @@ import { computed, ref, watch } from 'vue'
 import { UploadVideoModel, ElementPlusSizeEnum, VideoHandleResult } from '@/common/model'
 import { store } from '@/stores'
 import { getOSName } from '@/utils'
+import { generateUploadVideoObject } from './utils/generate'
 import GettingVideo from './components/getting-video/getting-video.vue'
 import UploadVideoCard from './components/upload-video-card/upload-video-card.vue'
-import { generateUploadVideoObject } from './utils/generate'
+import VideoPreview from './components/video-preview/video-preview.vue'
 
 const userConfigInfo = computed(() => store.getters.getUserConfigInfo).value
 const globalSettings = computed(() => store.getters.getGlobalSettings).value
@@ -27,6 +28,11 @@ const remove = (uuid: string) => {
   // todo
   console.log(uuid)
   store.dispatch('UPLOAD_VIDEO_LIST_REMOVE', uuid)
+}
+
+const videoPreviewRef = ref<InstanceType<typeof VideoPreview> | null>(null)
+const handlePreview = (videoItem: UploadVideoModel) => {
+  videoPreviewRef.value?.handleOpen(videoItem)
 }
 
 const uploadImage = () => {
@@ -68,7 +74,7 @@ watch(
       v-if="uploadVideoList.length && globalSettings!.elementPlusSize !== ElementPlusSizeEnum.small"
     >
       <div class="uploaded-item" v-for="(item, index) in uploadVideoList" :key="index + item.uuid">
-        <UploadVideoCard :video-item="item" @remove="remove($event)" />
+        <UploadVideoCard :video-item="item" @remove="remove($event)" @preview="handlePreview" />
       </div>
     </div>
 
@@ -114,6 +120,7 @@ watch(
         </div>
       </div>
     </div>
+    <VideoPreview ref="videoPreviewRef" />
   </div>
 </template>
 

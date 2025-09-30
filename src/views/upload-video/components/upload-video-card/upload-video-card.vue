@@ -11,6 +11,7 @@ import { copyVideoLink } from '@/utils/video-utils'
 
 const emits = defineEmits<{
   (e: 'remove', uuid: string): void
+  (e: 'preview', videoItem: Props['videoItem']): void
 }>()
 
 const props = defineProps<Props>()
@@ -54,6 +55,10 @@ const remove = (uuid: string) => {
   emits('remove', uuid)
 }
 
+const handlePreview = () => {
+  emits('preview', props.videoItem)
+}
+
 onMounted(async () => {
   await initFilename()
 })
@@ -68,7 +73,12 @@ onMounted(async () => {
       uploaded: !videoItem.uploadStatus.uploading && videoItem.uploadStatus.progress === 100
     }"
   >
-    <div class="video-show-container" v-loading="isLoading" :element-loading-text="loadingText">
+    <div
+      class="video-show-container"
+      v-loading="isLoading"
+      :element-loading-text="loadingText"
+      @click="handlePreview"
+    >
       <video class="preview-video" v-if="videoItem.objectURL" :src="videoItem.objectURL" />
     </div>
 
