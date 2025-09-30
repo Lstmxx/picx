@@ -11,6 +11,7 @@ import {
 } from '@/common/api'
 import { PICX_UPLOAD_IMG_DESC, PICX_UPLOAD_VIDEO_DESC } from '@/common/constant'
 import i18n from '@/plugins/vue/i18n'
+import router from '@/router'
 
 /**
  * 图片上传成功之后的处理
@@ -304,4 +305,50 @@ export function uploadVideoToGitHub(
       resolve(false)
     }
   })
+}
+
+/**
+ * 校验用户配置信息
+ * @param userConfigInfo 用户配置信息
+ */
+async function validateConfig(userConfigInfo: UserConfigInfoModel) {
+  const { token, repo, selectedDir } = userConfigInfo
+
+  if (!token) {
+    ElMessage.error({ message: i18n.global.t('upload_page.message1') })
+    await router.push('/config')
+    return false
+  }
+
+  if (!repo) {
+    ElMessage.error({ message: i18n.global.t('upload_page.message2') })
+    await router.push('/config')
+    return false
+  }
+
+  if (!selectedDir) {
+    ElMessage.error({ message: i18n.global.t('upload_page.message3') })
+    await router.push('/config')
+    return false
+  }
+
+  return true
+}
+
+export async function beforeUpload<T extends { uploadStatus: { progress: number } }>(
+  userConfigInfo: UserConfigInfoModel,
+  fileList: T[]
+) {
+  if (!validateConfig(userConfigInfo)) {
+    return []
+  }
+
+  const notYetUploadList = fileList.filter((x) => x.uploadStatus.progress === 0)
+
+  if (notYetUploadList.length === 0) {
+    ElMessage.error({ message: i18n.global.t('upload_page.message4') })
+    return []
+  }
+
+  return notYetUploadList
 }

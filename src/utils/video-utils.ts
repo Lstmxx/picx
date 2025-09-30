@@ -170,3 +170,24 @@ export const copyVideoLink = (videoObj: UploadedVideoModel, autoCopy: boolean = 
     ElMessage.error({ message: i18n.global.t('copy_fail_1') })
   }
 }
+
+/**
+ * 批量复制视频链接
+ * @param uploadedVideoList 视频对象列表
+ * @param autoCopy
+ */
+export const batchCopyVideoLinks = (
+  uploadedVideoList: UploadedVideoModel[],
+  autoCopy: boolean = false
+) => {
+  if (uploadedVideoList?.length > 0) {
+    let linksTxt = ''
+    uploadedVideoList.forEach((video, index) => {
+      const link = generateVideoLink(video)
+      linksTxt += `${link}${index < uploadedVideoList.length - 1 ? '\n' : ''}`
+    })
+    copyText(linksTxt, () => {
+      copyMessage(autoCopy)
+    })
+  }
+}

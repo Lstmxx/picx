@@ -1,5 +1,6 @@
 <!-- eslint-disable no-unused-vars -->
 <script lang="ts" setup>
+import { unref } from 'vue'
 import { VideoHandleResult } from '@/common/model'
 import { useGettingVideo } from './hooks/use-getting-vidoe'
 
@@ -17,6 +18,19 @@ defineProps({
 const { onDrop, onPaste, onSelect, curShowVideo } = useGettingVideo((result) => {
   // 传递给父组件
   emit('getVideoList', result)
+})
+
+const setCurShowVideo = (item: { uuid: string; objectURL: string }) => {
+  curShowVideo.value = item
+}
+
+const getCurShowVideo = () => {
+  return unref(curShowVideo)
+}
+
+defineExpose({
+  setCurShowVideo,
+  getCurShowVideo
 })
 </script>
 

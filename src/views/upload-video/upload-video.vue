@@ -7,9 +7,10 @@ import { generateUploadVideoObject } from './utils/generate'
 import GettingVideo from './components/getting-video/getting-video.vue'
 import UploadVideoCard from './components/upload-video-card/upload-video-card.vue'
 import VideoPreview from './components/video-preview/video-preview.vue'
+import { useUploadVideo } from './hooks/use-upload-video'
 
-const userConfigInfo = computed(() => store.getters.getUserConfigInfo).value
-const globalSettings = computed(() => store.getters.getGlobalSettings).value
+const userConfigInfo = computed(() => store.getters.getUserConfigInfo)
+const globalSettings = computed(() => store.getters.getGlobalSettings)
 const logoutStatus = computed(() => store.getters.getUserLoginStatus)
 const uploading = ref(false)
 const isCanDeploy = ref(false)
@@ -18,6 +19,18 @@ const shortcutKey = computed(() => (getOSName() === 'mac' ? '⌘' : 'Ctrl'))
 
 const uploadVideoList = ref<UploadVideoModel[]>([])
 
+const gettingVideoRef = ref<InstanceType<typeof GettingVideo> | null>(null)
+const resetGettingVideo = () => {
+  gettingVideoRef.value?.setCurShowVideo({
+    uuid: '',
+    objectURL: ''
+  })
+}
+
+const { uploadVideo } = useUploadVideo(uploadVideoList, () => {
+  resetGettingVideo()
+})
+
 const handleGettingVideoList = (result: VideoHandleResult[]) => {
   result.forEach((v) => {
     store.dispatch('UPLOAD_VIDEO_LIST_ADD', generateUploadVideoObject(v))
@@ -25,18 +38,16 @@ const handleGettingVideoList = (result: VideoHandleResult[]) => {
 }
 
 const remove = (uuid: string) => {
-  // todo
-  console.log(uuid)
+  const curShowVideo = gettingVideoRef.value?.getCurShowVideo()
+  if (uuid === curShowVideo?.uuid) {
+    resetGettingVideo()
+  }
   store.dispatch('UPLOAD_VIDEO_LIST_REMOVE', uuid)
 }
 
 const videoPreviewRef = ref<InstanceType<typeof VideoPreview> | null>(null)
 const handlePreview = (videoItem: UploadVideoModel) => {
   videoPreviewRef.value?.handleOpen(videoItem)
-}
-
-const uploadImage = () => {
-  // todo
 }
 
 const resetUploadInfo = () => {
@@ -58,6 +69,15 @@ watch(
   (nv) => {
     uploadVideoList.value = nv
     isCanDeploy.value = uploadVideoList.value.some((x) => x.uploadStatus.progress === 100)
+
+    const curShowVideo = gettingVideoRef.value?.getCurShowVideo()
+    if (uploadVideoList.value.length > 0 && !curShowVideo?.uuid) {
+      const latest = uploadVideoList.value[0]
+      gettingVideoRef.value?.setCurShowVideo({
+        uuid: latest.uuid,
+        objectURL: latest.objectURL
+      })
+    }
   },
   {
     immediate: true,
@@ -83,7 +103,11 @@ watch(
       <!-- 选择图片区域 -->
       <div class="row-item">
         <div class="content-box">
-          <GettingVideo :disabled="uploading" @get-video-list="handleGettingVideoList" />
+          <GettingVideo
+            ref="gettingVideoRef"
+            :disabled="uploading"
+            @get-video-list="handleGettingVideoList"
+          />
         </div>
       </div>
 
@@ -114,7 +138,7 @@ watch(
           <el-button :disabled="uploading" plain type="warning" @click="resetUploadInfo">
             {{ $t('reset') }} <span class="shortcut-key">{{ shortcutKey }} A</span>
           </el-button>
-          <el-button :disabled="uploading" plain type="primary" @click="uploadImage">
+          <el-button :disabled="uploading" plain type="primary" @click="uploadVideo">
             {{ $t('upload') }} <span class="shortcut-key">{{ shortcutKey }} S</span>
           </el-button>
         </div>
