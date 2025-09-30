@@ -16,6 +16,7 @@ export interface VideoHandleResult {
   uuid: string
   objectURL: string
   file: File
+  base64: string
 }
 
 export interface ImgProcessStateModel {

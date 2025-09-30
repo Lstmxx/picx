@@ -1,9 +1,11 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue'
-import { UploadVideoModel, ElementPlusSizeEnum } from '@/common/model'
+import { UploadVideoModel, ElementPlusSizeEnum, VideoHandleResult } from '@/common/model'
 import { store } from '@/stores'
 import { getOSName } from '@/utils'
 import GettingVideo from './components/getting-video/getting-video.vue'
+import UploadVideoCard from './components/upload-video-card/upload-video-card.vue'
+import { generateUploadVideoObject } from './utils/generate'
 
 const userConfigInfo = computed(() => store.getters.getUserConfigInfo).value
 const globalSettings = computed(() => store.getters.getGlobalSettings).value
@@ -15,9 +17,16 @@ const shortcutKey = computed(() => (getOSName() === 'mac' ? '⌘' : 'Ctrl'))
 
 const uploadVideoList = ref<UploadVideoModel[]>([])
 
-const remove = (e: any) => {
+const handleGettingVideoList = (result: VideoHandleResult[]) => {
+  result.forEach((v) => {
+    store.dispatch('UPLOAD_VIDEO_LIST_ADD', generateUploadVideoObject(v))
+  })
+}
+
+const remove = (uuid: string) => {
   // todo
-  console.log(e)
+  console.log(uuid)
+  store.dispatch('UPLOAD_VIDEO_LIST_REMOVE', uuid)
 }
 
 const uploadImage = () => {
@@ -37,6 +46,18 @@ watch(
     !_n && resetUploadInfo()
   }
 )
+
+watch(
+  () => (store.state as any).uploadVideoListModule.uploadVideoList,
+  (nv) => {
+    uploadVideoList.value = nv
+    isCanDeploy.value = uploadVideoList.value.some((x) => x.uploadStatus.progress === 100)
+  },
+  {
+    immediate: true,
+    deep: true
+  }
+)
 </script>
 
 <template>
@@ -47,7 +68,7 @@ watch(
       v-if="uploadVideoList.length && globalSettings!.elementPlusSize !== ElementPlusSizeEnum.small"
     >
       <div class="uploaded-item" v-for="(item, index) in uploadVideoList" :key="index + item.uuid">
-        <upload-video-card :img-obj="item" @remove="remove($event)" />
+        <UploadVideoCard :video-item="item" @remove="remove($event)" />
       </div>
     </div>
 
@@ -56,7 +77,7 @@ watch(
       <!-- 选择图片区域 -->
       <div class="row-item">
         <div class="content-box">
-          <GettingVideo />
+          <GettingVideo :disabled="uploading" @get-video-list="handleGettingVideoList" />
         </div>
       </div>
 

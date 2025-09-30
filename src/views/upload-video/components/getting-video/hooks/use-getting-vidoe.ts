@@ -52,7 +52,6 @@ export const useGettingVideo = (onSelectSuccess: (result: VideoHandleResult[]) =
   }
 
   const onDrop = async (e: DragEvent) => {
-    e.preventDefault()
     onSelectSuccess(await handleVideoFiles(e.dataTransfer?.files))
   }
 

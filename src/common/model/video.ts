@@ -21,10 +21,18 @@ export interface UploadedVideoModel {
 export interface UploadVideoModel {
   uuid: string
 
+  base64: {
+    originalBase64: string
+    watermarkBase64: string | null
+    compressBase64: string | null
+  }
+
   objectURL: string
 
   fileInfo: {
     originalFile: File | null
+    compressFile: File | null
+    watermarkFile: File | null
   }
 
   filename: {

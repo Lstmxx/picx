@@ -2,8 +2,9 @@ import { ElMessage } from 'element-plus'
 import { ImageHandleResult, VideoHandleResult } from '@/common/model'
 import { getUuid } from '@/utils/common-utils'
 import { imgFileToBase64 } from '@/utils/image-utils'
-import { IMG_UPLOAD_MAX_SIZE } from '@/common/constant'
+import { IMG_UPLOAD_MAX_SIZE, VIDEO_UPLOAD_MAX_SIZE } from '@/common/constant'
 import i18n from '@/plugins/vue/i18n'
+import { videoFileToBase64 } from './video-utils'
 
 /**
  * 获取文件名
@@ -110,7 +111,8 @@ export const isVideo = (fileType: string): boolean => {
  * @param file
  */
 export const gettingVideoFilesHandle = (file: File): Promise<VideoHandleResult | null> => {
-  return new Promise((resolve) => {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async (resolve) => {
     if (!file) {
       resolve(null)
     }
@@ -124,10 +126,20 @@ export const gettingVideoFilesHandle = (file: File): Promise<VideoHandleResult |
 
     const objectURL = URL.createObjectURL(file)
 
+    const base64 = (await videoFileToBase64(file)) || ''
+
+    if (getFileSize(base64.length) >= VIDEO_UPLOAD_MAX_SIZE * 1024) {
+      ElMessage.error(
+        i18n.global.t('upload_page.tip_10', { name: file.name, size: IMG_UPLOAD_MAX_SIZE })
+      )
+      resolve(null)
+    }
+
     resolve({
       uuid: getUuid(),
       objectURL,
-      file
+      file,
+      base64
     })
   })
 }
