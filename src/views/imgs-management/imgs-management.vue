@@ -9,9 +9,8 @@
       :element-loading-text="$t('management_page.loadingTxt1')"
     >
       <image-selector
-        v-if="currentPathImageList.length"
-        :currentDirImageList="currentPathImageList"
-        @updateInitImageList="currentPathImageList as any"
+        v-if="mediaList.length"
+        :media-list="mediaList"
         :key="renderKey"
       ></image-selector>
       <div
@@ -28,37 +27,28 @@
             <folder-card :class="'folder-card-' + idx" :folder-obj="dir" />
           </li>
         </ul>
-        <ul class="image-card-list list-item border-box" v-if="currentPathImageList.length">
+        <ul class="image-card-list list-item border-box" v-if="mediaList.length">
           <li
             class="image-card-item border-box"
-            v-for="(image, idx) in currentPathImageList"
+            v-for="(item, idx) in mediaList"
             :key="'image-card-' + idx"
           >
-            <image-card :image-obj="image" />
+            <image-card v-if="item.type === 'image'" :image-obj="item" />
+            <video-card
+              v-else-if="item.type === 'video'"
+              :video-obj="item"
+              @preview="handlePreview"
+            />
           </li>
         </ul>
-        <ul class="image-card-list list-item border-box" v-if="currentPathVideoList.length">
-          <li
-            class="image-card-item border-box"
-            v-for="(video, idx) in currentPathVideoList"
-            :key="'video-card-' + idx"
-          >
-            <video-card :video-obj="video" />
-          </li>
-        </ul>
-        <el-empty
-          v-if="
-            !currentPathImageList.length &&
-            !currentPathDirList.length &&
-            !currentPathVideoList.length
-          "
-        >
+        <el-empty v-if="!mediaList.length && !currentPathDirList.length">
           <el-button type="primary" @click="router.push('/upload')">{{
             $t('management_page.text_2')
           }}</el-button>
         </el-empty>
       </div>
     </div>
+    <video-preview ref="videoPreviewRef" />
   </div>
 </template>
 
@@ -79,6 +69,7 @@ import FolderCard from '@/views/imgs-management/components/folder-card/folder-ca
 import ImageCard from '@/views/imgs-management/components/image-card/image-card.vue'
 import router from '@/router'
 import VideoCard from './components/video-card/video-card.vue'
+import VideoPreview from '@/components/video-preview/video-preview.vue'
 
 const store = useStore()
 
@@ -91,6 +82,10 @@ const loadingImageList = ref(false)
 const currentPathDirList = ref<any[]>([])
 const currentPathImageList = ref<UploadedImageModel[]>([])
 const currentPathVideoList = ref<UploadedVideoModel[]>([])
+
+const mediaList = computed(() => {
+  return [...currentPathImageList.value, ...currentPathVideoList.value]
+})
 
 const isShowBatchTools = ref(false)
 
@@ -151,6 +146,14 @@ async function reloadCurrentDirContent() {
   loadingImageList.value = true
   await getRepoPathContent(userConfigInfo, viewDir)
   loadingImageList.value = false
+}
+
+const videoPreviewRef = ref<InstanceType<typeof VideoPreview> | null>(null)
+const handlePreview = (videoItem: { name: string; url: string }) => {
+  videoPreviewRef.value?.handleOpen({
+    url: videoItem.url,
+    name: videoItem.name
+  })
 }
 
 onMounted(() => {

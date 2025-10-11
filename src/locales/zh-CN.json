@@ -23,6 +23,10 @@
   "paste_image": "粘贴图片",
   "copy_success_1": "图片链接已自动复制到系统剪贴板",
   "copy_success_2": "图片链接复制成功",
+  "copy_success_video_1": "视频链接已自动复制到系统剪贴板",
+  "copy_success_video_2": "视频链接复制成功",
+  "copy_success_total_1": "链接已自动复制到系统剪贴板",
+  "copy_success_total_2": "链接复制成功",
   "copy_fail_1": "复制失败",
   "header": {
     "not_login": "未登录",

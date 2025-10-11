@@ -23,6 +23,10 @@
   "paste_image": "Paste images",
   "copy_success_1": "Image link has been automatically copied to the system clipboard",
   "copy_success_2": "Image link copied successfully",
+  "copy_success_video_1": "Video link has been automatically copied to the system clipboard",
+  "copy_success_video_2": "Video link copied successfully",
+  "copy_success_total_1": "Link has been automatically copied to the system clipboard",
+  "copy_success_total_2": "Link copied successfully",
   "copy_fail_1": "Copy failed",
   "header": {
     "not_login": "Not log in",

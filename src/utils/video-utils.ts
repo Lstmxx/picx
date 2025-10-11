@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { UploadedVideoModel, UploadVideoModel } from '@/common/model'
 import { store } from '@/stores'
-import { copyText, getUuid } from './common-utils'
+import { copyMessage, copyText, getUuid } from './common-utils'
 import i18n from '@/plugins/vue/i18n'
 
 /**
@@ -143,18 +143,6 @@ export const generateVideoLink = (videoObj: UploadedVideoModel): string | null =
   return null
 }
 
-const copyMessage = (autoCopy = false) => {
-  const message: string = autoCopy
-    ? i18n.global.t('copy_success_1')
-    : i18n.global.t('copy_success_2')
-
-  ElMessage({
-    type: autoCopy ? 'info' : 'success',
-    message,
-    duration: autoCopy ? 6000 : 4000
-  })
-}
-
 /**
  * 复制单个视频链接
  * @param videoObj
@@ -164,7 +152,7 @@ export const copyVideoLink = (videoObj: UploadedVideoModel, autoCopy: boolean = 
   const link = generateVideoLink(videoObj)
   if (link) {
     copyText(link, () => {
-      copyMessage(autoCopy)
+      copyMessage(autoCopy, 'video')
     })
   } else {
     ElMessage.error({ message: i18n.global.t('copy_fail_1') })

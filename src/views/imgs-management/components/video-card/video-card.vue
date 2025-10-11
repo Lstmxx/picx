@@ -5,6 +5,8 @@ import { ContextmenuEnum } from '@/common/directive/types'
 import { store } from '@/stores'
 import { copyVideoLink, generateVideoLink } from '@/utils/video-utils'
 
+const emits = defineEmits(['preview'])
+
 const props = defineProps({
   videoObj: {
     type: Object as PropType<UploadedVideoModel>,
@@ -30,6 +32,10 @@ const noneDeployed = computed(() => {
 const videoUrl = computed(() => {
   return generateVideoLink(props.videoObj) || ''
 })
+
+const handlePreview = () => {
+  emits('preview', { name: props.videoObj.name, url: videoUrl.value })
+}
 </script>
 
 <template>
@@ -46,7 +52,7 @@ const videoUrl = computed(() => {
   >
     <!-- 图片 -->
     <div class="video-card-top border-box">
-      <video class="video" :src="videoUrl" />
+      <video class="video" :src="videoUrl" @click.stop="handlePreview" />
     </div>
 
     <!-- 视频名称 & 复制链接 -->

@@ -6,7 +6,7 @@ import { getOSName } from '@/utils'
 import { generateUploadVideoObject } from './utils/generate'
 import GettingVideo from './components/getting-video/getting-video.vue'
 import UploadVideoCard from './components/upload-video-card/upload-video-card.vue'
-import VideoPreview from './components/video-preview/video-preview.vue'
+import VideoPreview from '@/components/video-preview/video-preview.vue'
 import { useUploadVideo } from './hooks/use-upload-video'
 
 const userConfigInfo = computed(() => store.getters.getUserConfigInfo)
@@ -47,7 +47,10 @@ const remove = (uuid: string) => {
 
 const videoPreviewRef = ref<InstanceType<typeof VideoPreview> | null>(null)
 const handlePreview = (videoItem: UploadVideoModel) => {
-  videoPreviewRef.value?.handleOpen(videoItem)
+  videoPreviewRef.value?.handleOpen({
+    url: videoItem.objectURL,
+    name: videoItem.filename.final
+  })
 }
 
 const resetUploadInfo = () => {
@@ -94,7 +97,7 @@ watch(
       v-if="uploadVideoList.length && globalSettings!.elementPlusSize !== ElementPlusSizeEnum.small"
     >
       <div class="uploaded-item" v-for="(item, index) in uploadVideoList" :key="index + item.uuid">
-        <UploadVideoCard :video-item="item" @remove="remove($event)" @preview="handlePreview" />
+        <upload-video-card :video-item="item" @remove="remove($event)" @preview="handlePreview" />
       </div>
     </div>
 
@@ -103,7 +106,7 @@ watch(
       <!-- 选择图片区域 -->
       <div class="row-item">
         <div class="content-box">
-          <GettingVideo
+          <getting-video
             ref="gettingVideoRef"
             :disabled="uploading"
             @get-video-list="handleGettingVideoList"
@@ -144,7 +147,7 @@ watch(
         </div>
       </div>
     </div>
-    <VideoPreview ref="videoPreviewRef" />
+    <video-preview ref="videoPreviewRef" />
   </div>
 </template>
 
