@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { UploadedVideoModel, UploadVideoModel } from '@/common/model'
 import { store } from '@/stores'
-import { copyText } from './common-utils'
+import { copyText, getUuid } from './common-utils'
 import i18n from '@/plugins/vue/i18n'
 
 /**
@@ -189,5 +189,25 @@ export const batchCopyVideoLinks = (
     copyText(linksTxt, () => {
       copyMessage(autoCopy)
     })
+  }
+}
+
+/**
+ * 生成一个图床管理中的视频对象
+ * @param item
+ * @param selectedDir
+ */
+export const createManagementVideoObject = (item: any, selectedDir: string): UploadedVideoModel => {
+  return {
+    type: 'video',
+    uuid: getUuid(),
+    dir: selectedDir,
+    name: item.name,
+    sha: item.sha,
+    path: item.path,
+    deleting: false,
+    size: item.size,
+    checked: false,
+    deployed: true
   }
 }

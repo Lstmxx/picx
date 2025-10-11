@@ -37,7 +37,22 @@
             <image-card :image-obj="image" />
           </li>
         </ul>
-        <el-empty v-if="!currentPathImageList.length && !currentPathDirList.length">
+        <ul class="image-card-list list-item border-box" v-if="currentPathVideoList.length">
+          <li
+            class="image-card-item border-box"
+            v-for="(video, idx) in currentPathVideoList"
+            :key="'video-card-' + idx"
+          >
+            <video-card :video-obj="video" />
+          </li>
+        </ul>
+        <el-empty
+          v-if="
+            !currentPathImageList.length &&
+            !currentPathDirList.length &&
+            !currentPathVideoList.length
+          "
+        >
           <el-button type="primary" @click="router.push('/upload')">{{
             $t('management_page.text_2')
           }}</el-button>
@@ -56,13 +71,14 @@ import {
   getDirContent,
   shiftKeyHandle
 } from '@/views/imgs-management/imgs-management.util'
-import { DirModeEnum, UploadedImageModel } from '@/common/model'
+import { DirModeEnum, UploadedImageModel, UploadedVideoModel } from '@/common/model'
 import { ContextmenuEnum } from '@/common/directive/types'
 import ImageSelector from '@/views/imgs-management/components/image-selector/image-selector.vue'
 import ToolsBar from '@/views/imgs-management/components/tools-bar/tools-bar.vue'
 import FolderCard from '@/views/imgs-management/components/folder-card/folder-card.vue'
 import ImageCard from '@/views/imgs-management/components/image-card/image-card.vue'
 import router from '@/router'
+import VideoCard from './components/video-card/video-card.vue'
 
 const store = useStore()
 
@@ -74,6 +90,7 @@ const loadingImageList = ref(false)
 
 const currentPathDirList = ref<any[]>([])
 const currentPathImageList = ref<UploadedImageModel[]>([])
+const currentPathVideoList = ref<UploadedVideoModel[]>([])
 
 const isShowBatchTools = ref(false)
 
@@ -84,12 +101,15 @@ async function dirContentHandle(dir: string) {
   if (dirContent) {
     const dirs = filterDirContent(dirContent, 'dir')
     const images = filterDirContent(dirContent, 'image')
+    const videos = filterDirContent(dirContent, 'video')
     if (!dirs.length && !images.length) {
       await getRepoPathContent(userConfigInfo, dir)
     } else {
       currentPathDirList.value = dirs
       currentPathImageList.value = images
+      currentPathVideoList.value = videos
       store.commit('REPLACE_IMAGE_CARD', { checkedImgArr: currentPathImageList.value })
+      store.commit('REPLACE_VIDEO_CARD', { checkedVideoArr: currentPathVideoList.value })
     }
   } else {
     await getRepoPathContent(userConfigInfo, dir)
@@ -155,7 +175,9 @@ watch(
     if (dirContent) {
       currentPathDirList.value = filterDirContent(dirContent, 'dir')
       currentPathImageList.value = filterDirContent(dirContent, 'image')
+      currentPathVideoList.value = filterDirContent(dirContent, 'video')
       store.commit('REPLACE_IMAGE_CARD', { checkedImgArr: currentPathImageList.value })
+      store.commit('REPLACE_VIDEO_CARD', { checkedVideoArr: currentPathVideoList.value })
     }
   },
   { deep: true }
@@ -172,10 +194,13 @@ watch(
 watch(
   () => store.getters.getUploadAreaState.activeInfo,
   (nv) => {
-    const { type, dir, img } = nv || {}
+    const { type, dir, img, video } = nv || {}
 
     currentPathImageList.value.forEach((item) => {
       item.active = type === ContextmenuEnum.img && item.name === img?.name
+    })
+    currentPathVideoList.value.forEach((item) => {
+      item.active = type === ContextmenuEnum.video && item.name === video?.name
     })
 
     currentPathDirList.value.forEach((dirObj) => {
