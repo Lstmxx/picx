@@ -9,7 +9,11 @@ import {
   getFileBlob,
   getBranchInfo
 } from '@/common/api'
-import { PICX_UPLOAD_IMG_DESC, PICX_UPLOAD_VIDEO_DESC } from '@/common/constant'
+import {
+  PICX_UPLOAD_IMG_DESC,
+  PICX_UPLOAD_VIDEO_DESC,
+  PICX_UPLOAD_VIDEOS_DESC
+} from '@/common/constant'
 import i18n from '@/plugins/vue/i18n'
 import router from '@/router'
 
@@ -238,7 +242,7 @@ const videoUploadedHandle = (
   store.dispatch('DIR_IMAGE_LIST_ADD_DIR', dir)
 
   // dirImageList 增加视频
-  store.dispatch('DIR_IMAGE_LIST_ADD_IMAGE', uploadedVideo)
+  store.dispatch('DIR_IMAGE_LIST_ADD_VIDEO', uploadedVideo)
 }
 
 /**
@@ -351,4 +355,85 @@ export async function beforeUpload<T extends { uploadStatus: { progress: number 
   }
 
   return notYetUploadList
+}
+
+/**
+ * 上传多个视频到 GitHub 仓库
+ * @param userConfigInfo
+ * @param imgs
+ */
+export async function uploadVideosToGitHub(
+  userConfigInfo: UserConfigInfoModel,
+  videos: UploadVideoModel[]
+): Promise<boolean> {
+  const { branch, repo, selectedDir, owner } = userConfigInfo
+
+  const blobs = []
+  // eslint-disable-next-line no-restricted-syntax
+  for (const video of videos) {
+    video.uploadStatus.uploading = true
+    const tempBase64 = (
+      video.base64.compressBase64 ||
+      video.base64.watermarkBase64 ||
+      video.base64.originalBase64
+    ).split(',')[1]
+    // 上传图片文件，为仓库创建 blobs
+    const blobRes = await getFileBlob(tempBase64, owner, repo)
+    if (blobRes) {
+      blobs.push({ video, ...blobRes })
+    } else {
+      video.uploadStatus.uploading = false
+      ElMessage.error(i18n.global.t('upload_page.tip_11', { name: video.filename.final }))
+    }
+  }
+
+  // 获取 head，用于获取当前分支信息（根目录的 tree sha 以及 head commit sha）
+  const branchRes: any = await getBranchInfo(owner, repo, branch)
+  if (!branchRes) {
+    return Promise.resolve(false)
+  }
+
+  const finalPath = selectedDir === '/' ? '' : `${selectedDir}/`
+
+  // 创建 tree
+  const treeRes = await createTree(
+    owner,
+    repo,
+    blobs.map((x: any) => ({
+      sha: x.sha,
+      path: `${finalPath}${x.video.filename.final}`
+    })),
+    branchRes
+  )
+  if (!treeRes) {
+    return Promise.resolve(false)
+  }
+
+  // 创建 commit 节点
+  const commitRes: any = await createCommit(
+    owner,
+    repo,
+    treeRes,
+    branchRes,
+    PICX_UPLOAD_VIDEOS_DESC
+  )
+  if (!commitRes) {
+    return Promise.resolve(false)
+  }
+
+  // 将当前分支 ref 指向新创建的 commit
+  const refRes = await createRef(owner, repo, branch, commitRes.sha)
+  if (!refRes) {
+    return Promise.resolve(false)
+  }
+
+  blobs.forEach((blob: any) => {
+    const name = blob.video.filename.final
+    videoUploadedHandle(
+      { name, sha: blob.sha, path: `${finalPath}${name}`, size: 0 },
+      blob.video,
+      userConfigInfo
+    )
+  })
+  return Promise.resolve(true)
 }

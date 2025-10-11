@@ -1,7 +1,7 @@
 import { computed, ref, Ref } from 'vue'
 import { UploadedVideoModel, UploadStatusEnum, UploadVideoModel } from '@/common/model'
 import { store } from '@/stores'
-import { beforeUpload, uploadVideoToGitHub } from '@/utils/upload-utils'
+import { beforeUpload, uploadVideosToGitHub, uploadVideoToGitHub } from '@/utils/upload-utils'
 import i18n from '@/plugins/vue/i18n'
 import { batchCopyVideoLinks, copyVideoLink } from '@/utils/video-utils'
 
@@ -14,7 +14,7 @@ export const useUploadVideo = (
   const userConfigInfo = computed(() => store.getters.getUserConfigInfo)
 
   const doUploadVideos = async (videoList: UploadVideoModel[]) => {
-    // 单张图片
+    // 单个视频
     if (videoList.length === 1) {
       if (await uploadVideoToGitHub(userConfigInfo.value, videoList[0])) {
         return UploadStatusEnum.uploaded
@@ -22,12 +22,12 @@ export const useUploadVideo = (
       return UploadStatusEnum.uploadFail
     }
 
-    // 多张图片
+    // 多个视频
     if (videoList.length > 1) {
-      // if (await uploadImagesToGitHub(userConfigInfo, imgList)) {
-      // }
-      return UploadStatusEnum.allUploaded
-      // return UploadStatusEnum.uploadFail
+      if (await uploadVideosToGitHub(userConfigInfo.value, videoList)) {
+        return UploadStatusEnum.allUploaded
+      }
+      return UploadStatusEnum.uploadFail
     }
 
     return UploadStatusEnum.uploadFail
@@ -38,7 +38,7 @@ export const useUploadVideo = (
     uploadedVideo: UploadedVideoModel[],
     isBatch: boolean = false
   ) => {
-    // 自动复制图片链接到系统剪贴板
+    // 自动复制链接到系统剪贴板
     if (isBatch) {
       batchCopyVideoLinks(uploadedVideo, true)
     } else {
@@ -67,13 +67,13 @@ export const useUploadVideo = (
       .map((x) => x.uploadedVideo!)
 
     switch (result) {
-      // 单张图片上传成功
+      // 单视频上传成功
       case UploadStatusEnum.uploaded:
         ElMessage.success({ message: i18n.global.t('upload_page.message5') })
         await afterUploadSuccess(uploadedVideo)
         break
 
-      // 多张图片上传成功
+      // 多视频上传成功
       case UploadStatusEnum.allUploaded:
         ElMessage.success({ message: i18n.global.t('upload_page.message6') })
         await afterUploadSuccess(uploadedVideo, true)
